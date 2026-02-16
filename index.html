@@ -1,1243 +1,1373 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Time Tracker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swim Tracker Ultra</title>
 
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
 
-<style>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
     :root {
-        --bg: #f5f1ea;
-        --bg-soft: #fdfaf6;
-        --card: #ffffff;
-        --accent: #2f6fff;
-        --accent-soft: rgba(47, 111, 255, 0.12);
-        --accent-strong: #214dcc;
-        --text-main: #1f2430;
-        --text-soft: #6b7280;
-        --border-soft: #e1d9cc;
-        --danger: #e45858;
-        --danger-soft: rgba(228, 88, 88, 0.12);
-        --radius-lg: 18px;
-        --radius-md: 12px;
-        --radius-sm: 8px;
-        --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
-        --shadow-subtle: 0 8px 20px rgba(15, 23, 42, 0.06);
-        --transition-fast: 0.18s ease-out;
+      --bg: #050816;
+      --bg-soft: rgba(15, 23, 42, 0.9);
+      --bg-softer: rgba(15, 23, 42, 0.7);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.2);
+      --accent-strong: #0ea5e9;
+      --danger: #f97373;
+      --success: #4ade80;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.4);
+      --card-radius: 18px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.65);
+      --chip-bg: rgba(15, 23, 42, 0.9);
+      --scroll-thumb: rgba(148, 163, 184, 0.6);
     }
 
-    * {
-        box-sizing: border-box;
+    [data-theme="light"] {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --bg-softer: #f9fafb;
+      --accent: #0ea5e9;
+      --accent-soft: rgba(14, 165, 233, 0.12);
+      --accent-strong: #0284c7;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-subtle: rgba(209, 213, 219, 0.9);
+      --card-radius: 16px;
+      --shadow-soft: 0 14px 30px rgba(15, 23, 42, 0.12);
+      --chip-bg: #f3f4f6;
+      --scroll-thumb: rgba(148, 163, 184, 0.9);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+    }
+
+    [data-theme="light"] body {
+      background: radial-gradient(circle at top, #e0f2fe 0, #f9fafb 55%, #e5e7eb 100%);
     }
 
     body {
-        margin: 0;
-        font-family: 'General Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        background: radial-gradient(circle at top left, #fdf7ec 0, #f5f1ea 40%, #f0ece6 100%);
-        color: var(--text-main);
-    }
-
-    header {
-        padding: 18px 20px 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .brand-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #2f6fff, #4dd0ff);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-        font-size: 18px;
-        box-shadow: 0 10px 25px rgba(47, 111, 255, 0.35);
-    }
-
-    .brand-text h1 {
-        margin: 0;
-        font-size: 20px;
-        letter-spacing: 0.02em;
-    }
-
-    .brand-text span {
-        font-size: 12px;
-        color: var(--text-soft);
-    }
-
-    .primary-actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .pill {
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: var(--accent-soft);
-        color: var(--accent-strong);
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .pill-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 999px;
-        background: #22c55e;
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.18);
-    }
-
-    button {
-        border: none;
-        border-radius: 999px;
-        padding: 9px 18px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        white-space: nowrap;
-    }
-
-    button:active {
-        transform: translateY(1px) scale(0.99);
-        box-shadow: none;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #2f6fff, #4dd0ff);
-        color: white;
-        box-shadow: 0 12px 30px rgba(47, 111, 255, 0.45);
-    }
-
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #2859d8, #3bb8eb);
-    }
-
-    .btn-ghost {
-        background: transparent;
-        color: var(--text-soft);
-        padding-inline: 10px;
-    }
-
-    .btn-ghost:hover {
-        background: rgba(255, 255, 255, 0.7);
-        color: var(--text-main);
-    }
-
-    .subtitle-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-inline: 4px;
-        margin-top: 4px;
-    }
-
-    .subtitle-row span {
-        font-size: 12px;
-        color: var(--text-soft);
-    }
-
-    .autosave-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        color: var(--text-soft);
-    }
-
-    .autosave-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: #22c55e;
-    }
-
-    .autosave-indicator.saving .autosave-dot {
-        animation: pulse 0.9s infinite alternate;
-        background: #facc15;
-    }
-
-    @keyframes pulse {
-        from { transform: scale(1); opacity: 0.7; }
-        to { transform: scale(1.4); opacity: 1; }
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
     }
 
     .app-shell {
-        padding: 10px 16px 24px;
+      position: relative;
+      width: 100%;
+      max-width: 1300px;
+      min-height: 100vh;
+      padding: 24px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
-    .app-layout {
-        max-width: 1120px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1.1fr);
-        gap: 18px;
+    .background-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.18), transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(45, 212, 191, 0.16), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
     }
 
-    @media (max-width: 880px) {
-        .app-layout {
-            grid-template-columns: minmax(0, 1fr);
-        }
+    [data-theme="light"] .background-gradient {
+      background:
+        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
+        radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.18), transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(45, 212, 191, 0.18), transparent 55%);
     }
 
-    .panel {
-        background: var(--bg-soft);
-        border-radius: var(--radius-lg);
-        padding: 14px;
-        box-shadow: var(--shadow-subtle);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(12px);
+    .app-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--bg-soft), var(--bg-softer));
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(22px);
     }
 
-    .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
-    .panel-header h2 {
-        margin: 0;
-        font-size: 15px;
+    .logo-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0%, var(--accent), #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.55);
+      color: #e5e7eb;
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
     }
 
-    .panel-header span {
-        font-size: 11px;
-        color: var(--text-soft);
+    [data-theme="light"] .logo-circle {
+      box-shadow: 0 10px 24px rgba(56, 189, 248, 0.45);
     }
 
-    .tab-row {
-        display: inline-flex;
-        padding: 3px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    .brand h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.03em;
     }
 
-    .tab-btn {
-        border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-soft);
-        background: transparent;
-        cursor: pointer;
-        border: none;
-        transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
     }
 
-    .tab-btn.active {
-        background: var(--accent);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 8px 18px rgba(47, 111, 255, 0.45);
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
-    .tab-btn:hover:not(.active) {
-        background: rgba(15, 23, 42, 0.04);
-        color: var(--text-main);
-    }
-
-    .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 10px;
-        align-items: center;
-    }
-
-    .chip {
-        font-size: 11px;
-        padding: 5px 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.9);
-        color: var(--text-soft);
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .chip strong {
-        color: var(--text-main);
-    }
-
-    select, input, textarea {
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-soft);
-        padding: 8px 10px;
-        font-size: 13px;
-        font-family: inherit;
-        background: rgba(255, 255, 255, 0.9);
-        transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
-    }
-
-    select:focus, input:focus, textarea:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 1px rgba(47, 111, 255, 0.25);
-        background: #ffffff;
-        transform: translateY(-1px);
-    }
-
-    #sortSelect, #filterEvent {
-        min-width: 130px;
-    }
-
-    #entries {
-        display: grid;
-        gap: 10px;
-        margin-top: 4px;
-        max-height: 420px;
-        overflow: auto;
-        padding-right: 4px;
-    }
-
-    .entry {
-        background: var(--card);
-        border-radius: var(--radius-md);
-        padding: 10px 12px;
-        border: 1px solid rgba(225, 217, 204, 0.9);
-        display: grid;
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
-        gap: 6px 10px;
-        align-items: center;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-        position: relative;
-        overflow: hidden;
-    }
-
-    @media (max-width: 640px) {
-        .entry {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    .entry::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(120deg, rgba(47, 111, 255, 0.04), transparent);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity var(--transition-fast);
-    }
-
-    .entry:hover::before {
-        opacity: 1;
-    }
-
-    .entry-main {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .entry-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .entry-event {
-        padding: 3px 8px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.04);
-    }
-
-    .entry-time {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--accent-strong);
-    }
-
-    .entry-meta {
-        font-size: 11px;
-        color: var(--text-soft);
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .entry-notes {
-        font-size: 12px;
-        color: var(--text-main);
-        opacity: 0.8;
-        margin-top: 2px;
-    }
-
-    .entry-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 6px;
-        align-items: center;
-    }
-
-    .btn-mini {
-        padding: 5px 10px;
-        font-size: 11px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.03);
-        color: var(--text-soft);
-    }
-
-    .btn-mini:hover {
-        background: rgba(15, 23, 42, 0.06);
-        color: var(--text-main);
-    }
-
-    .btn-mini-danger {
-        background: var(--danger-soft);
-        color: var(--danger);
-    }
-
-    .btn-mini-danger:hover {
-        background: rgba(228, 88, 88, 0.18);
-        color: #b91c1c;
-    }
-
-    .badge-best {
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 999px;
-        background: #22c55e1a;
-        color: #15803d;
-        font-weight: 600;
-    }
-
-    .empty-state {
-        font-size: 12px;
-        color: var(--text-soft);
-        padding: 18px 10px 6px;
-        text-align: center;
-    }
-
-    .empty-state span {
-        display: block;
-        margin-top: 4px;
-        font-size: 11px;
-    }
-
-    /* Right panel */
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        margin-top: 6px;
+    .header-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .stat-card {
-        background: var(--card);
-        border-radius: var(--radius-md);
-        padding: 10px;
-        border: 1px solid rgba(225, 217, 204, 0.9);
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+      min-width: 120px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top left, var(--accent-soft), var(--bg-soft));
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .stat-label {
-        font-size: 11px;
-        color: var(--text-soft);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
     }
 
     .stat-value {
-        font-size: 16px;
-        font-weight: 700;
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-size: 1.2rem;
     }
 
-    .stat-sub {
-        font-size: 11px;
-        color: var(--text-soft);
+    .theme-toggle {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-main);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
     }
 
-    .settings-section {
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px dashed rgba(148, 132, 110, 0.5);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    .theme-toggle:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
 
-    .settings-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--text-soft);
+    .app-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 18px;
+      align-items: flex-start;
     }
 
-    .settings-row strong {
-        color: var(--text-main);
-        font-size: 12px;
+    .panel {
+      background: var(--bg-soft);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
     }
 
-    .toggle {
-        position: relative;
-        width: 38px;
-        height: 20px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.12);
-        cursor: pointer;
-        transition: background var(--transition-fast);
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
     }
 
-    .toggle-thumb {
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 16px;
-        height: 16px;
-        border-radius: 999px;
-        background: white;
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
-        transition: transform var(--transition-fast);
-    }
-
-    .toggle.on {
-        background: var(--accent);
-    }
-
-    .toggle.on .toggle-thumb {
-        transform: translateX(18px);
-    }
-
-    .note-small {
-        font-size: 11px;
-        color: var(--text-soft);
-    }
-
-    /* Modal */
-
-    #entryForm {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 16px;
-        z-index: 20;
-    }
-
-    #entryForm.hidden {
-        display: none;
-    }
-
-    .overlay {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.55));
-        backdrop-filter: blur(12px);
-    }
-
-    .form-card {
-        position: relative;
-        z-index: 1;
-        background: linear-gradient(145deg, #fdfaf6, #f5f1ea);
-        border-radius: 22px;
-        padding: 18px 18px 14px;
-        width: 100%;
-        max-width: 360px;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        animation: popIn 0.18s ease-out;
-    }
-
-    @keyframes popIn {
-        from { transform: translateY(8px) scale(0.97); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
-    }
-
-    .form-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-
-    .form-header h2 {
-        margin: 0;
-        font-size: 16px;
-    }
-
-    .form-header span {
-        font-size: 11px;
-        color: var(--text-soft);
+    .panel-left {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
     .form-grid {
-        display: grid;
-        gap: 8px;
-        margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-full {
+      grid-column: 1 / -1;
     }
 
     label {
-        font-size: 12px;
-        color: var(--text-soft);
-        display: block;
-        margin-bottom: 3px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    input,
+    select,
+    textarea {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: var(--bg-soft);
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    [data-theme="light"] input,
+    [data-theme="light"] select,
+    [data-theme="light"] textarea {
+      background: #f9fafb;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(148, 163, 184, 0.7);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: var(--bg-soft);
     }
 
     textarea {
-        resize: vertical;
-        min-height: 60px;
-        max-height: 120px;
+      resize: vertical;
     }
 
-    .form-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 10px;
-        gap: 8px;
+    .btn-primary {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      border-radius: 999px;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      background: linear-gradient(135deg, var(--accent-strong), #22c1c3);
+      color: #0b1120;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.6);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
     }
 
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.75);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.5);
+    }
+
+    .panel-filters {
+      margin-top: 4px;
+      padding: 12px 14px 12px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, var(--accent-soft), var(--bg-soft));
+      border: 1px dashed var(--border-subtle);
+    }
+
+    .panel-filters h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px 10px;
+      align-items: end;
+    }
+
+    .filters-grid .field {
+      gap: 3px;
+    }
+
+    .btn-ghost,
     .btn-secondary {
-        background: rgba(15, 23, 42, 0.04);
-        color: var(--text-soft);
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-muted);
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
     }
 
+    .btn-ghost:hover,
     .btn-secondary:hover {
-        background: rgba(15, 23, 42, 0.08);
-        color: var(--text-main);
+      background: var(--accent-soft);
+      color: var(--text-main);
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
 
-    .helper-text {
-        font-size: 11px;
-        color: var(--text-soft);
-        margin-top: 4px;
+    .panel-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .helper-text code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: 11px;
-        background: rgba(15, 23, 42, 0.04);
-        padding: 2px 5px;
-        border-radius: 999px;
+    .panel-tools-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .hidden-section {
-        display: none;
+    .panel-tools-right {
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-muted);
     }
 
-    .hidden-section.active {
-        display: block;
+    .panel-right h2 {
+      margin-bottom: 10px;
     }
-</style>
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 4px;
+    }
+
+    .tab {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .tab.active {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      border-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 260px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .list::-webkit-scrollbar-thumb {
+      background: var(--scroll-thumb);
+      border-radius: 999px;
+    }
+
+    .swim-card {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 12px 10px;
+      border-radius: var(--card-radius);
+      background: radial-gradient(circle at top left, var(--accent-soft), var(--bg-soft));
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
+    }
+
+    [data-theme="light"] .swim-card {
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .swim-card-pb {
+      border-color: var(--accent-strong);
+      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.8);
+    }
+
+    [data-theme="light"] .swim-card-pb {
+      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.4);
+    }
+
+    .swim-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .swim-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .swim-title-row h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      margin-right: 4px;
+      border: 1px solid var(--border-subtle);
+      background: var(--chip-bg);
+    }
+
+    .chip-stroke {
+      border-color: rgba(56, 189, 248, 0.8);
+      color: var(--accent-strong);
+    }
+
+    .chip-distance {
+      border-color: rgba(94, 234, 212, 0.8);
+      color: #5eead4;
+    }
+
+    .chip-pb {
+      border-color: rgba(250, 204, 21, 0.9);
+      color: #facc15;
+      background: rgba(250, 204, 21, 0.08);
+    }
+
+    .swim-time-block {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .swim-time {
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-size: 1.1rem;
+    }
+
+    .swim-goal {
+      font-size: 0.75rem;
+    }
+
+    .goal-met {
+      color: var(--success);
+    }
+
+    .goal-miss {
+      color: var(--danger);
+    }
+
+    .swim-pace {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .swim-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      margin-top: 4px;
+    }
+
+    .meta-item {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .swim-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
+    }
+
+    .btn-icon {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-main);
+      padding: 4px 7px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--accent-soft);
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    .btn-danger {
+      border-color: rgba(248, 113, 113, 0.9);
+      color: var(--danger);
+    }
+
+    .empty-state {
+      border-radius: 18px;
+      padding: 18px 14px;
+      text-align: center;
+      border: 1px dashed var(--border-subtle);
+      background: var(--bg-soft);
+      color: var(--text-muted);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 12px;
+    }
+
+    .chart-card {
+      border-radius: var(--card-radius);
+      padding: 10px 10px 8px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .chart-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 180px;
+    }
+
+    .app-footer {
+      margin-top: auto;
+      padding: 8px 4px 0;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1024px) {
+      .app-main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .list {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        padding: 16px 10px 12px;
+      }
+
+      .app-header {
+        padding: 14px 12px;
+      }
+
+      .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .filters-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .swim-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .swim-time-block {
+        text-align: left;
+        align-items: flex-start;
+      }
+
+      .charts-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* PRINT LAYOUT */
+    @media print {
+      :root {
+        --text-main: #000000;
+        --text-muted: #4b5563;
+      }
+
+      body {
+        background: #ffffff !important;
+      }
+
+      .background-gradient,
+      .app-header .theme-toggle,
+      .panel-left,
+      .tabs,
+      .chart-card,
+      .app-footer {
+        display: none !important;
+      }
+
+      .app-shell {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .app-header {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+        padding: 8px 0 4px;
+      }
+
+      .logo-circle {
+        box-shadow: none;
+      }
+
+      .panel-right {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+        padding: 0;
+      }
+
+      .list {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+      }
+
+      .swim-card {
+        box-shadow: none;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        background: #ffffff;
+        page-break-inside: avoid;
+      }
+
+      .swim-actions {
+        display: none !important;
+      }
+
+      .panel-right h2 {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
-
 <body>
-
-<header>
-    <div class="top-bar">
-        <div class="brand">
-            <div class="brand-icon">S</div>
-            <div class="brand-text">
-                <h1>Swim Time Tracker</h1>
-                <span>Keep track of personal bests, race history, and progress.</span>
-            </div>
-        </div>
-        <div class="primary-actions">
-            <div class="pill">
-                <div class="pill-dot"></div>
-                Autosave on this device
-            </div>
-            <button class="btn-primary" id="addEntryBtn">
-                + Add Time
-            </button>
-        </div>
-    </div>
-    <div class="subtitle-row">
-        <div class="autosave-indicator" id="autosaveIndicator">
-            <div class="autosave-dot"></div>
-            <span>Saved</span>
-        </div>
-    </div>
-</header>
-
 <div class="app-shell">
-    <div class="app-layout">
-        <!-- Left: Times -->
-        <section class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Times</h2>
-                    <span>View and organize all your swims.</span>
-                </div>
-                <div class="tab-row">
-                    <button class="tab-btn active" data-tab="listTab">List</button>
-                    <button class="tab-btn" data-tab="statsTab">Stats</button>
-                </div>
-            </div>
+  <div class="background-gradient"></div>
 
-            <div id="listTab" class="tab-content">
-                <div class="controls">
-                    <select id="filterEvent">
-                        <option value="all">All events</option>
-                        <option>50 Free</option>
-                        <option>100 Free</option>
-                        <option>200 Free</option>
-                        <option>500 Free</option>
-                        <option>1000 Free</option>
-                        <option>1650 Free</option>
-                        <option>100 Back</option>
-                        <option>200 Back</option>
-                        <option>100 Breast</option>
-                        <option>200 Breast</option>
-                        <option>100 Fly</option>
-                        <option>200 Fly</option>
-                        <option>200 IM</option>
-                        <option>400 IM</option>
-                    </select>
-
-                    <select id="sortSelect">
-                        <option value="newest">Newest first</option>
-                        <option value="oldest">Oldest first</option>
-                        <option value="best">Best time</option>
-                        <option value="event">Event name</option>
-                    </select>
-
-                    <div class="chip">
-                        <strong id="countChip">0</strong> swims saved
-                    </div>
-                </div>
-
-                <div id="entries"></div>
-                <div class="empty-state" id="emptyState">
-                    No swims yet.
-                    <span>Tap <strong>“+ Add Time”</strong> to add your first swim.</span>
-                </div>
-            </div>
-
-            <div id="statsTab" class="tab-content hidden-section">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total swims</div>
-                        <div class="stat-value" id="statTotal">0</div>
-                        <div class="stat-sub">All events combined</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Events tracked</div>
-                        <div class="stat-value" id="statEvents">0</div>
-                        <div class="stat-sub">Different race types</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Most recent swim</div>
-                        <div class="stat-value" id="statLastDate">—</div>
-                        <div class="stat-sub" id="statLastEvent">No swims yet</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Best overall time</div>
-                        <div class="stat-value" id="statBestTime">—</div>
-                        <div class="stat-sub" id="statBestEvent">No swims yet</div>
-                    </div>
-                </div>
-                <p class="helper-text" style="margin-top:10px;">
-                    Stats update automatically whenever you add or remove a swim.
-                </p>
-            </div>
-        </section>
-
-        <!-- Right: Summary / Settings -->
-        <section class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Summary & Settings</h2>
-                    <span>Quick overview and device options.</span>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Today</div>
-                    <div class="stat-value" id="statTodayCount">0</div>
-                    <div class="stat-sub">Swims logged today</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">This week</div>
-                    <div class="stat-value" id="statWeekCount">0</div>
-                    <div class="stat-sub">Swims in last 7 days</div>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <div class="settings-row">
-                    <div>
-                        <strong>Compact cards</strong>
-                        <div class="note-small">Show more swims on screen at once.</div>
-                    </div>
-                    <div class="toggle" id="toggleCompact">
-                        <div class="toggle-thumb"></div>
-                    </div>
-                </div>
-
-                <div class="settings-row">
-                    <div>
-                        <strong>Backup file</strong>
-                        <div class="note-small">Download a copy of your times to keep safe.</div>
-                    </div>
-                    <button class="btn-mini" id="backupBtn">Download backup</button>
-                </div>
-
-                <div class="settings-row">
-                    <div>
-                        <strong>Reset this device</strong>
-                        <div class="note-small">Remove all saved times from this browser.</div>
-                    </div>
-                    <button class="btn-mini btn-mini-danger" id="clearBtn">Clear all</button>
-                </div>
-            </div>
-        </section>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-circle">
+        BF
+      </div>
+      <div>
+        <h1>Swim Time Tracker</h1>
+      </div>
     </div>
+    <div class="header-right">
+      <div class="header-stats">
+        <div class="stat-card">
+          <span class="stat-label">Sessions</span>
+          <span class="stat-value" id="statTotalSwims">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Best Time</span>
+          <span class="stat-value" id="statBestTime">–</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg Pace /100</span>
+          <span class="stat-value" id="statAvgPace">–</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total Distance</span>
+          <span class="stat-value" id="statTotalDistance">0m</span>
+        </div>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button">
+        <span id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel panel-left">
+      <h2>Add / Edit Swim</h2>
+      <form id="timeForm" class="form-grid">
+        <div class="field">
+          <label for="event">Event</label>
+          <input type="text" id="event" required />
+        </div>
+        <div class="field">
+          <label for="distance">Distance</label>
+          <input type="number" id="distance" min="25" step="25" required />
+        </div>
+        <div class="field">
+          <label for="stroke">Stroke</label>
+          <select id="stroke" required>
+            <option value="Freestyle">Freestyle</option>
+            <option value="Backstroke">Backstroke</option>
+            <option value="Breaststroke">Breaststroke</option>
+            <option value="Butterfly">Butterfly</option>
+            <option value="IM">IM</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" required />
+        </div>
+        <div class="field">
+          <label for="time">Time (mm:ss.cc)</label>
+          <input type="text" id="time"required />
+        </div>
+        <div class="field">
+          <label for="goal">Goal Time (optional)</label>
+          <input type="text" id="goal" />
+        </div>
+        <div class="field field-full">
+          <label for="notes">Notes</label>
+          <textarea id="notes" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Save Swim</button>
+      </form>
+
+      <section class="panel panel-filters">
+        <h3>Filters & View</h3>
+        <div class="filters-grid">
+          <div class="field">
+            <label for="filterStroke">Stroke</label>
+            <select id="filterStroke">
+              <option value="All">All</option>
+              <option value="Freestyle">Freestyle</option>
+              <option value="Backstroke">Backstroke</option>
+              <option value="Breaststroke">Breaststroke</option>
+              <option value="Butterfly">Butterfly</option>
+              <option value="IM">IM</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filterEvent">Event</label>
+            <input type="text" id="filterEvent" placeholder="e.g., 100 Free" />
+          </div>
+          <div class="field">
+            <label for="sortBy">Sort By</label>
+            <select id="sortBy">
+              <option value="dateDesc">Date (newest)</option>
+              <option value="dateAsc">Date (oldest)</option>
+              <option value="timeAsc">Time (fastest)</option>
+              <option value="timeDesc">Time (slowest)</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-tools">
+          <div class="panel-tools-left">
+            <button id="clearAll" class="btn-ghost" type="button">Clear All</button>
+            <button id="printBtn" class="btn-secondary" type="button">Print</button>
+          </div>
+          <div class="panel-tools-right">
+            Times are saved automatically.
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel panel-right">
+      <h2>Analytics & History</h2>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="tab-history">
+          History
+        </button>
+        <button class="tab" data-tab="tab-charts">
+          Charts
+        </button>
+      </div>
+
+      <div id="tab-history" class="tab-content active">
+        <div id="timeList" class="list"></div>
+      </div>
+
+      <div id="tab-charts" class="tab-content">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Time Trend (by date)</h3>
+            <div class="chart-wrapper">
+              <canvas id="timeChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Pace /100 Trend</h3>
+            <div class="chart-wrapper">
+              <canvas id="paceChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Benner Francis
+  </footer>
 </div>
 
-<!-- Add Time Modal -->
-<section id="entryForm" class="hidden">
-    <div class="overlay"></div>
-    <div class="form-card">
-        <div class="form-header">
-            <div>
-                <h2>Add swim</h2>
-                <span>Log a race or practice time.</span>
-            </div>
-            <button class="btn-secondary" id="cancelEntry">Close</button>
-        </div>
-
-        <div class="form-grid">
-            <div>
-                <label for="eventInput">Event</label>
-                <select id="eventInput">
-                    <option value="">Choose event</option>
-                    <option>50 Free</option>
-                    <option>100 Free</option>
-                    <option>200 Free</option>
-                    <option>500 Free</option>
-                    <option>1000 Free</option>
-                    <option>1650 Free</option>
-                    <option>100 Back</option>
-                    <option>200 Back</option>
-                    <option>100 Breast</option>
-                    <option>200 Breast</option>
-                    <option>100 Fly</option>
-                    <option>200 Fly</option>
-                    <option>200 IM</option>
-                    <option>400 IM</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="timeInput">Time</label>
-                <input id="timeInput" placeholder="01:02.34">
-                <div class="helper-text">
-                    Format: <code>MM:SS.ms</code> (minutes : seconds . hundredths)
-                </div>
-            </div>
-
-            <div>
-                <label for="dateInput">Date</label>
-                <input id="dateInput" type="date">
-            </div>
-
-            <div>
-                <label for="notesInput">Notes (optional)</label>
-                <textarea id="notesInput" placeholder="Meet name, heat, lane, how it felt..."></textarea>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <div class="helper-text">
-                Your swim is saved automatically when you press <strong>Save swim</strong>.
-            </div>
-            <button class="btn-primary" id="saveEntry">Save swim</button>
-        </div>
-    </div>
-</section>
-
 <script>
-const STORAGE_KEY = "swimTimes_v2";
+  const STORAGE_KEY = "swimTimesUltra";
+  const THEME_KEY = "swimThemeUltra";
 
-let entries = loadEntries();
+  const form = document.getElementById("timeForm");
+  const list = document.getElementById("timeList");
+  const filterStroke = document.getElementById("filterStroke");
+  const filterEvent = document.getElementById("filterEvent");
+  const sortBy = document.getElementById("sortBy");
+  const clearAllBtn = document.getElementById("clearAll");
+  const printBtn = document.getElementById("printBtn");
 
-const entriesDiv = document.getElementById("entries");
-const addEntryBtn = document.getElementById("addEntryBtn");
-const entryForm = document.getElementById("entryForm");
-const saveEntry = document.getElementById("saveEntry");
-const cancelEntry = document.getElementById("cancelEntry");
-const sortSelect = document.getElementById("sortSelect");
-const filterEvent = document.getElementById("filterEvent");
-const clearBtn = document.getElementById("clearBtn");
-const backupBtn = document.getElementById("backupBtn");
-const countChip = document.getElementById("countChip");
-const emptyState = document.getElementById("emptyState");
-const autosaveIndicator = document.getElementById("autosaveIndicator");
-const toggleCompact = document.getElementById("toggleCompact");
+  const statTotalSwims = document.getElementById("statTotalSwims");
+  const statBestTime = document.getElementById("statBestTime");
+  const statAvgPace = document.getElementById("statAvgPace");
+  const statTotalDistance = document.getElementById("statTotalDistance");
 
-const statTotal = document.getElementById("statTotal");
-const statEvents = document.getElementById("statEvents");
-const statLastDate = document.getElementById("statLastDate");
-const statLastEvent = document.getElementById("statLastEvent");
-const statBestTime = document.getElementById("statBestTime");
-const statBestEvent = document.getElementById("statBestEvent");
-const statTodayCount = document.getElementById("statTodayCount");
-const statWeekCount = document.getElementById("statWeekCount");
+  const themeToggle = document.getElementById("themeToggle");
+  const themeLabel = document.getElementById("themeLabel");
 
-const tabButtons = document.querySelectorAll(".tab-btn");
-const listTab = document.getElementById("listTab");
-const statsTab = document.getElementById("statsTab");
+  const tabs = document.querySelectorAll(".tab");
+  const tabContents = document.querySelectorAll(".tab-content");
 
-function loadEntries() {
+  let timeChart = null;
+  let paceChart = null;
+
+  function parseTimeToSeconds(str) {
+    if (!str) return NaN;
+    const parts = str.split(":");
+    if (parts.length === 1) {
+      return parseFloat(parts[0]) || NaN;
+    }
+    const minutes = parseInt(parts[0]) || 0;
+    const sec = parseFloat(parts[1]) || 0;
+    return minutes * 60 + sec;
+  }
+
+  function formatSeconds(sec) {
+    if (!isFinite(sec)) return "–";
+    const minutes = Math.floor(sec / 60);
+    const seconds = (sec % 60).toFixed(2).padStart(5, "0");
+    return `${String(minutes).padStart(2, "0")}:${seconds}`;
+  }
+
+  function loadSwims() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        return parsed;
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     } catch {
-        return [];
+      return [];
     }
-}
+  }
 
-function saveEntries() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    showAutosave("Saved");
-}
+  function saveSwims(swims) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(swims));
+  }
 
-let autosaveTimeout;
-function showAutosave(text) {
-    autosaveIndicator.classList.add("saving");
-    autosaveIndicator.querySelector("span").textContent = text || "Saving...";
-    clearTimeout(autosaveTimeout);
-    autosaveTimeout = setTimeout(() => {
-        autosaveIndicator.classList.remove("saving");
-        autosaveIndicator.querySelector("span").textContent = "Saved";
-    }, 700);
-}
-
-function parseTimeToMs(t) {
-    if (!t) return Infinity;
-    const parts = t.split(":");
-    if (parts.length !== 2) return Infinity;
-    const [minStr, rest] = parts;
-    const secParts = rest.split(".");
-    if (secParts.length !== 2) return Infinity;
-    const [secStr, msStr] = secParts;
-    const min = Number(minStr);
-    const sec = Number(secStr);
-    const ms = Number(msStr);
-    if (Number.isNaN(min) || Number.isNaN(sec) || Number.isNaN(ms)) return Infinity;
-    return min * 60000 + sec * 1000 + ms;
-}
-
-function formatDateDisplay(dateStr) {
-    if (!dateStr) return "No date";
-    const d = new Date(dateStr + "T00:00:00");
-    if (Number.isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-function isToday(dateStr) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr + "T00:00:00");
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() &&
-           d.getMonth() === now.getMonth() &&
-           d.getDate() === now.getDate();
-}
-
-function isWithinLastDays(dateStr, days) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr + "T00:00:00");
-    const now = new Date();
-    const diff = now - d;
-    const limit = days * 24 * 60 * 60 * 1000;
-    return diff >= 0 && diff <= limit;
-}
-
-function computeBestByEvent() {
-    const best = {};
-    for (const e of entries) {
-        const key = e.event;
-        const ms = parseTimeToMs(e.time);
-        if (!best[key] || ms < best[key].ms) {
-            best[key] = { ms, time: e.time };
-        }
-    }
-    return best;
-}
-
-function render() {
-    entriesDiv.innerHTML = "";
-
-    let filtered = [...entries];
-
-    if (filterEvent.value !== "all") {
-        filtered = filtered.filter(e => e.event === filterEvent.value);
+  function computeStats(swims) {
+    if (!swims.length) {
+      statTotalSwims.textContent = "0";
+      statBestTime.textContent = "–";
+      statAvgPace.textContent = "–";
+      statTotalDistance.textContent = "0m";
+      return;
     }
 
-    if (sortSelect.value === "best") {
-        filtered.sort((a, b) => parseTimeToMs(a.time) - parseTimeToMs(b.time));
-    } else if (sortSelect.value === "event") {
-        filtered.sort((a, b) => a.event.localeCompare(b.event));
-    } else if (sortSelect.value === "oldest") {
-        filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    statTotalSwims.textContent = swims.length.toString();
+
+    const validTimes = swims
+      .map(s => parseTimeToSeconds(s.time))
+      .filter(t => isFinite(t));
+
+    if (!validTimes.length) {
+      statBestTime.textContent = "–";
+      statAvgPace.textContent = "–";
     } else {
-        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const best = Math.min(...validTimes);
+      statBestTime.textContent = formatSeconds(best);
     }
 
-    const bestByEvent = computeBestByEvent();
+    const paces = swims
+      .map(s => {
+        const t = parseTimeToSeconds(s.time);
+        const d = parseFloat(s.distance);
+        if (!isFinite(t) || !isFinite(d) || d <= 0) return NaN;
+        return t / (d / 100);
+      })
+      .filter(p => isFinite(p));
 
-    countChip.textContent = entries.length.toString();
-    emptyState.style.display = filtered.length === 0 ? "block" : "none";
+    if (!paces.length) {
+      statAvgPace.textContent = "–";
+    } else {
+      const avgPace = paces.reduce((a, b) => a + b, 0) / paces.length;
+      statAvgPace.textContent = formatSeconds(avgPace);
+    }
 
-    filtered.forEach((e, index) => {
-        const div = document.createElement("div");
-        div.className = "entry";
-        if (document.body.classList.contains("compact")) {
-            div.style.padding = "8px 10px";
+    const totalDistance = swims
+      .map(s => parseFloat(s.distance))
+      .filter(d => isFinite(d) && d > 0)
+      .reduce((a, b) => a + b, 0);
+
+    statTotalDistance.textContent = `${totalDistance}m`;
+  }
+
+  function getFilteredSortedSwims() {
+    let swims = loadSwims();
+
+    const strokeVal = filterStroke.value;
+    const eventVal = filterEvent.value.trim().toLowerCase();
+
+    if (strokeVal !== "All") {
+      swims = swims.filter(s => s.stroke === strokeVal);
+    }
+    if (eventVal) {
+      swims = swims.filter(s => s.event.toLowerCase().includes(eventVal));
+    }
+
+    const sortVal = sortBy.value;
+    swims.sort((a, b) => {
+      if (sortVal === "dateDesc") {
+        return new Date(b.date) - new Date(a.date);
+      } else if (sortVal === "dateAsc") {
+        return new Date(a.date) - new Date(b.date);
+      } else if (sortVal === "timeAsc") {
+        return parseTimeToSeconds(a.time) - parseTimeToSeconds(b.time);
+      } else if (sortVal === "timeDesc") {
+        return parseTimeToSeconds(b.time) - parseTimeToSeconds(a.time);
+      }
+      return 0;
+    });
+
+    return swims;
+  }
+
+  function render() {
+    const swims = getFilteredSortedSwims();
+    const allSwims = loadSwims();
+    list.innerHTML = "";
+
+    if (!swims.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No swims logged yet. Add your first swim on the left.";
+      list.appendChild(empty);
+    } else {
+      const bestByEvent = {};
+      allSwims.forEach((s, idx) => {
+        const key = s.event + "|" + s.stroke;
+        const t = parseTimeToSeconds(s.time);
+        if (!isFinite(t)) return;
+        if (!bestByEvent[key] || t < bestByEvent[key].time) {
+          bestByEvent[key] = { time: t, index: idx };
+        }
+      });
+
+      swims.forEach(s => {
+        const globalIndex = allSwims.findIndex(x => x.id === s.id);
+        const key = s.event + "|" + s.stroke;
+        const isPB = bestByEvent[key] && bestByEvent[key].index === globalIndex;
+
+        const timeSec = parseTimeToSeconds(s.time);
+        const goalSec = parseTimeToSeconds(s.goal);
+        const distance = parseFloat(s.distance);
+        const pacePer100 = isFinite(timeSec) && isFinite(distance) && distance > 0
+          ? timeSec / (distance / 100)
+          : NaN;
+
+        let goalText = "";
+        let goalClass = "";
+        if (s.goal) {
+          if (isFinite(goalSec) && isFinite(timeSec)) {
+            const diff = timeSec - goalSec;
+            const sign = diff > 0 ? "+" : "";
+            goalText = `${sign}${diff.toFixed(2)}s vs goal`;
+            goalClass = diff <= 0 ? "goal-met" : "goal-miss";
+          } else {
+            goalText = "Goal set";
+          }
         }
 
-        const isBestForEvent = bestByEvent[e.event] && bestByEvent[e.event].time === e.time;
+        const card = document.createElement("article");
+        card.className = "swim-card" + (isPB ? " swim-card-pb" : "");
 
-        div.innerHTML = `
-            <div class="entry-main">
-                <div class="entry-header">
-                    <div class="entry-event">${e.event}</div>
-                    <div class="entry-time">${e.time}</div>
-                    ${isBestForEvent ? `<span class="badge-best">Best for this event</span>` : ""}
-                </div>
-                <div class="entry-meta">
-                    <span>${formatDateDisplay(e.date)}</span>
-                    ${e.source ? `<span>Source: ${e.source}</span>` : ""}
-                </div>
-                ${e.notes ? `<div class="entry-notes">${e.notes}</div>` : ""}
+        card.innerHTML = `
+          <div class="swim-main">
+            <div class="swim-title-row">
+              <div>
+                <h3>${s.event}</h3>
+                <span class="chip chip-stroke">${s.stroke}</span>
+                <span class="chip chip-distance">${s.distance}m</span>
+                ${isPB ? '<span class="chip chip-pb">PB</span>' : ""}
+              </div>
+              <div class="swim-time-block">
+                <span class="swim-time">${s.time}</span>
+                ${s.goal ? `<span class="swim-goal ${goalClass}">${goalText}</span>` : ""}
+                ${isFinite(pacePer100) ? `<span class="swim-pace">Pace /100: ${formatSeconds(pacePer100)}</span>` : ""}
+              </div>
             </div>
-            <div class="entry-actions">
-                <button class="btn-mini" data-edit="${index}">Edit</button>
-                <button class="btn-mini btn-mini-danger" data-delete="${index}">Delete</button>
+            <div class="swim-meta-row">
+              <span class="meta-item">Date: ${s.date || "–"}</span>
+              ${s.notes ? `<span class="meta-item">Notes: ${s.notes}</span>` : ""}
             </div>
+          </div>
+          <div class="swim-actions">
+            <button class="btn-icon" data-action="edit" data-id="${s.id}" title="Edit">
+              Edit
+            </button>
+            <button class="btn-icon btn-danger" data-action="delete" data-id="${s.id}" title="Delete">
+              Delete
+            </button>
+          </div>
         `;
 
-        entriesDiv.appendChild(div);
+        list.appendChild(card);
+      });
+    }
+
+    computeStats(allSwims);
+    updateCharts(allSwims);
+  }
+
+  function upsertSwim(swim) {
+    const swims = loadSwims();
+    const index = swims.findIndex(s => s.id === swim.id);
+    if (index >= 0) {
+      swims[index] = swim;
+    } else {
+      swims.push(swim);
+    }
+    saveSwims(swims);
+    render();
+  }
+
+  function deleteSwim(id) {
+    let swims = loadSwims();
+    swims = swims.filter(s => s.id !== id);
+    saveSwims(swims);
+    render();
+  }
+
+  list.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const action = btn.getAttribute("data-action");
+    const id = btn.getAttribute("data-id");
+    const swims = loadSwims();
+    const swim = swims.find(s => s.id === id);
+    if (!swim) return;
+
+    if (action === "delete") {
+      if (confirm("Delete this swim?")) {
+        deleteSwim(id);
+      }
+    } else if (action === "edit") {
+      document.getElementById("event").value = swim.event;
+      document.getElementById("distance").value = swim.distance;
+      document.getElementById("stroke").value = swim.stroke;
+      document.getElementById("date").value = swim.date;
+      document.getElementById("time").value = swim.time;
+      document.getElementById("goal").value = swim.goal || "";
+      document.getElementById("notes").value = swim.notes || "";
+      form.dataset.editId = swim.id;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const event = document.getElementById("event").value.trim();
+    const distance = document.getElementById("distance").value.trim();
+    const stroke = document.getElementById("stroke").value;
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value.trim();
+    const goal = document.getElementById("goal").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+
+    if (!event || !distance || !stroke || !date || !time) return;
+
+    const editId = form.dataset.editId;
+    const swim = {
+      id: editId || ("swim_" + Date.now() + "_" + Math.random().toString(16).slice(2)),
+      event,
+      distance,
+      stroke,
+      date,
+      time,
+      goal,
+      notes
+    };
+
+    upsertSwim(swim);
+    form.reset();
+    delete form.dataset.editId;
+
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
+  });
+
+  [filterStroke, filterEvent, sortBy].forEach(el => {
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+
+  clearAllBtn.addEventListener("click", () => {
+    if (confirm("Clear ALL saved swims? This cannot be undone.")) {
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    }
+  });
+
+  printBtn.addEventListener("click", () => {
+    window.print();
+  });
+
+  function updateCharts(swims) {
+    const sorted = [...swims].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const labels = sorted.map(s => s.date || "");
+    const times = sorted.map(s => parseTimeToSeconds(s.time));
+    const paces = sorted.map(s => {
+      const t = parseTimeToSeconds(s.time);
+      const d = parseFloat(s.distance);
+      if (!isFinite(t) || !isFinite(d) || d <= 0) return NaN;
+      return t / (d / 100);
     });
 
-    updateStats();
-}
+    const timeData = times.map(t => (isFinite(t) ? t : null));
+    const paceData = paces.map(p => (isFinite(p) ? p : null));
 
-function updateStats() {
-    const total = entries.length;
-    statTotal.textContent = total.toString();
+    const timeCtx = document.getElementById("timeChart").getContext("2d");
+    const paceCtx = document.getElementById("paceChart").getContext("2d");
 
-    const eventsSet = new Set(entries.map(e => e.event));
-    statEvents.textContent = eventsSet.size.toString();
+    if (timeChart) timeChart.destroy();
+    if (paceChart) paceChart.destroy();
 
-    if (entries.length === 0) {
-        statLastDate.textContent = "—";
-        statLastEvent.textContent = "No swims yet";
-        statBestTime.textContent = "—";
-        statBestEvent.textContent = "No swims yet";
-        statTodayCount.textContent = "0";
-        statWeekCount.textContent = "0";
-        return;
-    }
-
-    const sortedByDate = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const last = sortedByDate[0];
-    statLastDate.textContent = formatDateDisplay(last.date);
-    statLastEvent.textContent = last.event || "—";
-
-    const sortedByTime = [...entries].sort((a, b) => parseTimeToMs(a.time) - parseTimeToMs(b.time));
-    const best = sortedByTime[0];
-    if (parseTimeToMs(best.time) === Infinity) {
-        statBestTime.textContent = "—";
-        statBestEvent.textContent = "No valid times yet";
-    } else {
-        statBestTime.textContent = best.time;
-        statBestEvent.textContent = best.event || "—";
-    }
-
-    const todayCount = entries.filter(e => isToday(e.date)).length;
-    const weekCount = entries.filter(e => isWithinLastDays(e.date, 7)).length;
-    statTodayCount.textContent = todayCount.toString();
-    statWeekCount.textContent = weekCount.toString();
-}
-
-function openModal(editIndex = null) {
-    entryForm.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-
-    const eventInput = document.getElementById("eventInput");
-    const timeInput = document.getElementById("timeInput");
-    const dateInput = document.getElementById("dateInput");
-    const notesInput = document.getElementById("notesInput");
-
-    if (editIndex !== null) {
-        const e = entries[editIndex];
-        eventInput.value = e.event || "";
-        timeInput.value = e.time || "";
-        dateInput.value = e.date || "";
-        notesInput.value = e.notes || "";
-        saveEntry.dataset.editIndex = editIndex;
-    } else {
-        eventInput.value = "";
-        timeInput.value = "";
-        dateInput.value = new Date().toISOString().slice(0, 10);
-        notesInput.value = "";
-        delete saveEntry.dataset.editIndex;
-    }
-
-    setTimeout(() => {
-        eventInput.focus();
-    }, 10);
-}
-
-function closeModal() {
-    entryForm.classList.add("hidden");
-    document.body.style.overflow = "";
-}
-
-addEntryBtn.onclick = () => openModal();
-
-cancelEntry.onclick = () => closeModal();
-
-entryForm.addEventListener("click", (e) => {
-    if (e.target === entryForm.querySelector(".overlay")) {
-        closeModal();
-    }
-});
-
-saveEntry.onclick = () => {
-    const event = document.getElementById("eventInput").value;
-    const time = document.getElementById("timeInput").value.trim();
-    const date = document.getElementById("dateInput").value;
-    const notes = document.getElementById("notesInput").value.trim();
-
-    if (!event || !time || !date) {
-        showAutosave("Fill all required fields");
-        return;
-    }
-
-    const ms = parseTimeToMs(time);
-    if (ms === Infinity) {
-        showAutosave("Check time format");
-        return;
-    }
-
-    const editIndex = saveEntry.dataset.editIndex;
-    if (editIndex !== undefined) {
-        entries[Number(editIndex)] = { event, time, date, notes };
-    } else {
-        entries.push({ event, time, date, notes });
-    }
-
-    saveEntries();
-    render();
-    closeModal();
-};
-
-entriesDiv.addEventListener("click", (e) => {
-    const deleteIndex = e.target.getAttribute("data-delete");
-    const editIndex = e.target.getAttribute("data-edit");
-
-    if (deleteIndex !== null) {
-        const idx = Number(deleteIndex);
-        if (Number.isInteger(idx) && idx >= 0 && idx < entries.length) {
-            entries.splice(idx, 1);
-            saveEntries();
-            render();
+    timeChart = new Chart(timeCtx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Time (seconds)",
+            data: timeData,
+            borderColor: "#38bdf8",
+            backgroundColor: "rgba(56, 189, 248, 0.25)",
+            tension: 0.25,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `Time: ${formatSeconds(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--text-muted") }
+          },
+          y: {
+            ticks: {
+              color: getComputedStyle(document.documentElement).getPropertyValue("--text-muted"),
+              callback: v => formatSeconds(v)
+            }
+          }
         }
-    }
-
-    if (editIndex !== null) {
-        const idx = Number(editIndex);
-        if (Number.isInteger(idx) && idx >= 0 && idx < entries.length) {
-            openModal(idx);
-        }
-    }
-});
-
-sortSelect.onchange = () => {
-    render();
-};
-
-filterEvent.onchange = () => {
-    render();
-};
-
-backupBtn.onclick = () => {
-    const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "swim_times_backup.json";
-    a.click();
-    showAutosave("Backup downloaded");
-};
-
-clearBtn.onclick = () => {
-    const sure = confirm("Clear all saved swims from this device?");
-    if (!sure) return;
-    entries = [];
-    saveEntries();
-    render();
-};
-
-tabButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-        tabButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        const tab = btn.dataset.tab;
-        if (tab === "listTab") {
-            listTab.classList.remove("hidden-section");
-            statsTab.classList.remove("active");
-            statsTab.classList.add("hidden-section");
-        } else {
-            statsTab.classList.add("active");
-            statsTab.classList.remove("hidden-section");
-            listTab.classList.add("hidden-section");
-        }
+      }
     });
-});
 
-toggleCompact.addEventListener("click", () => {
-    toggleCompact.classList.toggle("on");
-    document.body.classList.toggle("compact");
+    paceChart = new Chart(paceCtx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Pace /100 (seconds)",
+            data: paceData,
+            borderColor: "#22c55e",
+            backgroundColor: "rgba(34, 197, 94, 0.25)",
+            tension: 0.25,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `Pace /100: ${formatSeconds(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--text-muted") }
+          },
+          y: {
+            ticks: {
+              color: getComputedStyle(document.documentElement).getPropertyValue("--text-muted"),
+              callback: v => formatSeconds(v)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    themeLabel.textContent = theme === "dark" ? "Dark" : "Light";
+  }
+
+  function loadTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    const theme = saved === "light" || saved === "dark" ? saved : "dark";
+    applyTheme(theme);
+  }
+
+  themeToggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+    localStorage.setItem(THEME_KEY, next);
+    const allSwims = loadSwims();
+    updateCharts(allSwims);
+  });
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.tab;
+      tabs.forEach(t => t.classList.toggle("active", t === tab));
+      tabContents.forEach(c => c.classList.toggle("active", c.id === target));
+    });
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    if (e.key === "n" || e.key === "N") {
+      document.getElementById("event").focus();
+    } else if (e.key === "t" || e.key === "T") {
+      themeToggle.click();
+    }
+  });
+
+  (function init() {
+    loadTheme();
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
     render();
-});
-
-render();
-showAutosave("Saved");
+  })();
 </script>
-
 </body>
 </html>
